@@ -1,13 +1,15 @@
-let buffer = [];
-
 function addToBuffer(words) {
   console.log("Adding words to buffer:", words);
-  buffer.push(...words);
+  const existingBuffer = JSON.parse(localStorage.getItem("incorrectWordsBuffer") || "[]");
+  localStorage.setItem("incorrectWordsBuffer", JSON.stringify(existingBuffer.concat(words)));
 }
 
 function saveBufferToFile(delimiter = "|") {
-  const content = buffer.join(delimiter);
-  console.log("Saving buffer to file with content:", content);
+  const content = JSON.parse(localStorage.getItem("incorrectWordsBuffer") || "[]").join(delimiter);
+  if (!content) {
+    console.log("Buffer is empty, nothing to save.");
+    return;
+  }
   const blob = new Blob([content], { type: "text/plain" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -19,7 +21,11 @@ function saveBufferToFile(delimiter = "|") {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  buffer = [];
+}
+
+function clearBuffer() {
+  console.log("Clearing buffer");
+  localStorage.removeItem("incorrectWordsBuffer");
 }
 
 // Listen for messages from popup
@@ -27,9 +33,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   console.log("Received message:", request);
   if (request.action === "saveBuffer") {
     // Request to save buffer to file
+    const buffer = JSON.parse(localStorage.getItem("incorrectWordsBuffer") || "[]");
     console.log("Saving buffer with", buffer.length, "words");
     saveBufferToFile(request.delimiter || "|");
     sendResponse({ success: true, count: buffer.length });
+  } else if (request.action === "clearBuffer") {
+    // Request to clear buffer
+    clearBuffer();
+    sendResponse({ success: true });
   }
   return true;
 });
