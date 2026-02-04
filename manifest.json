@@ -1,19 +1,22 @@
 {
-    "name": "Typing Practice Extension",
-    "description": "An extension to help users practice errors from typeracer.com.",
-    "version": "1.0",
     "manifest_version": 3,
-    "action": {},
+    "name": "Typing Practice",
+    "version": "1.0",
+    "permissions": [
+        "activeTab",
+        "tabs"
+    ],
+    "action": {
+        "default_popup": "popup/popup.html"
+    },
     "content_scripts": [
         {
-            "js": [
-                "scripts/content.js"
-            ],
             "matches": [
-                "https://developer.chrome.com/docs/extensions/*",
-                "https://developer.chrome.com/docs/webstore/*",
-                "https://typeracer.com/*",
                 "https://play.typeracer.com/*"
+            ],
+            "js": [
+                "scripts/buffer.js",
+                "scripts/content.js"
             ]
         }
     ]

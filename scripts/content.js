@@ -1,53 +1,45 @@
-let buffer = [];
-
-function saveIncorrectWords(incorrectWords) {
-  incorrectWords.forEach((word) => {
-    buffer.push(word.innerText);
-  });
-  console.log("Saved incorrect words:", buffer);
-}
-
+// Check for the list of incorrect words in the game container
 const incorrectWordsSelector = ".replayWord";
 const completeObserver = new MutationObserver(() => {
-  const target = document.querySelectorAll(incorrectWordsSelector);
+  const target = document.querySelectorAll(incorrectWordsSelector); // select incorrect words
   if (target.length > 0) {
-    saveIncorrectWords(target);
+    // save incorrect words to buffer
+    addToBuffer(Array.from(target).map((el) => el.innerText));
+
+    // reset the observer to look for a new game to start
     completeObserver.disconnect();
-    isObserving = false;
-    console.log("Stopped observing after saving incorrect words");
+    isInGame = false;
   }
 });
 
+// Observer to watch for text input panel to show up which indicates a game start
 const targetSelector = "table.inputPanel"; // game container
-let isObserving = false;
-function startObservingTarget() {
-  const target = document.querySelector(targetSelector + ':not([aria-hidden="true"])');
-  if (target && !isObserving && getComputedStyle(target).display !== "none") {
-    completeObserver.observe(target, { childList: true, subtree: true });
-    isObserving = true;
-    console.log("Started observing game container");
-  }
-}
-
-function stopObservingTarget() {
-  if (isObserving) {
-    completeObserver.disconnect();
-    isObserving = false;
-    console.log("Stopped observing game container");
-  }
-}
-
-// Observer to watch for target element appearing/disappearing
+let isInGame = false;
 const documentObserver = new MutationObserver(() => {
   const target = document.querySelector(targetSelector + ':not([aria-hidden="true"])');
-  if (target && !isObserving) {
+  if (target && !isInGame) {
     // check if target exists and not already observing
     startObservingTarget();
-  } else if (!target && isObserving) {
+  } else if (!target && isInGame) {
     // if disappeared
-    stopObservingTarget();
+    stopObservingGame();
   }
 });
+
+function startObservingTarget() {
+  const target = document.querySelector(targetSelector + ':not([aria-hidden="true"])');
+  if (target && !isInGame && getComputedStyle(target).display !== "none") {
+    completeObserver.observe(target, { childList: true, subtree: true });
+    isInGame = true;
+  }
+}
+
+function stopObservingGame() {
+  if (isInGame) {
+    completeObserver.disconnect();
+    isInGame = false;
+  }
+}
 
 // Start watching the document for changes
 documentObserver.observe(document.body, { childList: true, subtree: true });
